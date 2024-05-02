@@ -1,49 +1,43 @@
-import { WebSocket } from "ws";
-import { INIT_GAME, MOVE } from "./messages";
-import { Game } from "./Game";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.GameManager = void 0;
+const messages_1 = require("./messages");
+const Game_1 = require("./Game");
 // User, Game
- 
-export class GameManager {
-    private games: Game[];
-    private pendingUser: WebSocket | null;
-    private users: WebSocket[];
+class GameManager {
     constructor() {
         this.games = [];
         this.pendingUser = null;
         this.users = [];
     }
-
-    addUser(socket: WebSocket){
+    addUser(socket) {
         this.users.push(socket);
         this.addhandler(socket);
     }
-
-    removeUser(socket: WebSocket){
-        this.users = this.users.filter(user => user!== socket);
+    removeUser(socket) {
+        this.users = this.users.filter(user => user !== socket);
     }
-
-    private addhandler(socket: WebSocket){
+    addhandler(socket) {
         socket.on("message", (data) => {
             const message = JSON.parse(data.toString());
-
-            if (message.type === INIT_GAME) {
-                if (this.pendingUser){
+            if (message.type === messages_1.INIT_GAME) {
+                if (this.pendingUser) {
                     // start a game
-                    const game = new Game(this.pendingUser, socket);
+                    const game = new Game_1.Game(this.pendingUser, socket);
                     this.games.push(game);
                     this.pendingUser = null;
-
-                } else {
+                }
+                else {
                     this.pendingUser = socket;
                 }
             }
-
-            if (message.type === MOVE){
+            if (message.type === messages_1.MOVE) {
                 const game = this.games.find(game => game.player1 === socket || game.player2 === socket);
-                if(game){
+                if (game) {
                     game.makeMove(socket, message.move);
                 }
             }
-        })
+        });
     }
 }
+exports.GameManager = GameManager;
